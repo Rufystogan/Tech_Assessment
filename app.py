@@ -1,19 +1,43 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-@app.route('/api/v1/candidate/', methods=['POST'])
-def get_api_key():
+# Mock database to store API keys
+API_KEYS = {}
+
+@app.route("/")
+def home():
+    return "Welcome to the API! Use the endpoints to generate an API key and fetch questions."
+
+@app.route("/api/v1/candidate/", methods=["POST"])
+def generate_api_key():
     data = request.get_json()
-    email = data.get('email_address')
-    name = data.get('name')
-    # Example response for the API key generation (you'd replace this with actual logic)
-    return jsonify({"api_key": "your_generated_api_key"}), 200
+    name = data.get("name")
+    email = data.get("email_address")
 
-@app.route('/api/v1/download/questions', methods=['GET'])
-def get_questions():
-    # Example of returning dummy questions
-    return jsonify({"questions": ["What is your name?", "What is your email?"]})
+    if not name or not email:
+        return jsonify({"error": "Name and email_address are required"}), 400
 
-if __name__ == '__main__':
+    # Generate a mock API key (for simplicity)
+    api_key = f"mock-api-key-for-{email}"
+    API_KEYS[email] = api_key
+
+    return jsonify({"api_key": api_key})
+
+@app.route("/api/v1/download/questions", methods=["GET"])
+def download_questions():
+    api_key = request.headers.get("x-api-key")
+
+    if not api_key or api_key not in API_KEYS.values():
+        return jsonify({"error": "Invalid or missing API key"}), 401
+
+    # Mock questions
+    questions = [
+        {"id": 1, "question": "What is Python?"},
+        {"id": 2, "question": "Explain Flask framework."},
+    ]
+
+    return jsonify({"questions": questions})
+
+if __name__ == "__main__":
     app.run(debug=True)
