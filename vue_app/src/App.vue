@@ -1,39 +1,29 @@
 <template>
   <div id="app">
     <h1>Syarikat Takaful Brunei Darussalam</h1>
-    <h3>Technical Programming Assessment
-      Instructions</h3>
+    <h3>Technical Programming Assessment</h3>
 
-    <!-- Form for API Key -->
-    <form @submit.prevent="getApiKey" class="form-container">
-      <input 
-        type="text" 
-        v-model="name" 
-        placeholder="Name" 
-        required 
-      />
-      <input 
-        type="email" 
-        v-model="email" 
-        placeholder="Email" 
-        required 
-      />
-      <button type="submit" :disabled="loading">
-        {{ loading ? "Loading..." : "Get API Key" }}
-      </button>
-    </form>
+    <div class="form-container">
+      <!-- Row with input and button inside columns -->
+      <div class="form-row">
+        <div class="form-col">
+          <input 
+            type="text" 
+            v-model="apiKey" 
+            placeholder="Enter your API key"
+            required
+          />
+        </div>
+        <div class="form-col">
+          <button @click="fetchQuestions" :disabled="loading">
+            {{ loading ? "Fetching..." : "Download Questions" }}
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Error message -->
     <p v-if="error" class="error-message">{{ error }}</p>
-
-    <!-- API Key Display -->
-    <div v-if="apiKey" class="api-key-container">
-      <h2>Your API Key:</h2>
-      <p class="api-key">{{ apiKey }}</p>
-      <button @click="fetchQuestions" :disabled="loading">
-        {{ loading ? "Fetching..." : "Download Questions" }}
-      </button>
-    </div>
 
     <!-- Questions List -->
     <div v-if="questions.length > 0" class="questions-container">
@@ -53,8 +43,6 @@ import axios from "axios";
 export default {
   data() {
     return {
-      name: "",
-      email: "",
       apiKey: "",
       questions: [],
       loading: false,
@@ -62,42 +50,17 @@ export default {
     };
   },
   methods: {
-    async getApiKey() {
-      // Reset error and set loading state
-      this.error = null;
-      this.loading = true;
-
-      // Input validation
-      if (!this.name || !this.email) {
-        this.error = "Name and email are required.";
-        this.loading = false;
-        return;
-      }
-
-      try {
-        const response = await axios.post("http://127.0.0.1:5000/api/v1/candidate/", {
-          name: this.name,
-          email_address: this.email,
-        });
-        this.apiKey = response.data.api_key;
-      } catch (error) {
-        this.error = "Error fetching API key. Please try again.";
-        console.error(error);
-      } finally {
-        this.loading = false;
-      }
-    },
     async fetchQuestions() {
-      // Reset error and set loading state
       this.error = null;
       this.loading = true;
 
       try {
-        const response = await axios.get("http://127.0.0.1:5000/api/v1/download/questions", {
+        const response = await axios.get("https://assessment.takafulbrunei.com/api/v1/download/questions", {
           headers: {
-            "x-api-key": this.apiKey,
+            "x-api-key": this.apiKey,  // API key passed in header
           },
         });
+
         this.questions = response.data.questions;
       } catch (error) {
         this.error = "Error fetching questions. Please try again.";
@@ -135,15 +98,28 @@ h1 {
 
 .form-container {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  justify-content: center;
+  align-items: center;
 }
 
-input[type="text"],
-input[type="email"] {
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;  /* Space between items */
+  justify-content: center;  /* Center the items */
+}
+
+.form-col {
+  display: flex;
+  flex: 1;
+  max-width: 300px;
+}
+
+input[type="text"] {
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  width: 100%;  /* Make input fill its container */
 }
 
 button {
@@ -153,21 +129,12 @@ button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  width: 100%;  /* Make button fill its container */
 }
 
 button:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
-}
-
-.api-key-container {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.api-key {
-  font-weight: bold;
-  color: #007bff;
 }
 
 .questions-container {
